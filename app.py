@@ -6,27 +6,26 @@ import cv2
 import tempfile
 
 st.set_page_config(layout="wide")
-st.title("🛩️ YOLOv5 + Optical Flow | Drone Forensic Demo")
+st.title("🛩️ YOLOv5 + Optical Flow | Drone Forensic")
 
-# Load YOLOv5s model (smallest version for speed)
+# Load YOLOv5s model from torch.hub (online)
 @st.cache_resource
 def load_model():
     return torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 model = load_model()
 
-# YOLO inference
+# Inference function using YOLOv5
 def infer_image(img_path):
     results = model(img_path)
     results.render()
     return Image.fromarray(results.ims[0])
 
-# Optical flow between two frames
+# Optical Flow Drawing Function
 def draw_optical_flow(prev_img, next_img):
     prev_gray = cv2.cvtColor(prev_img, cv2.COLOR_BGR2GRAY)
     next_gray = cv2.cvtColor(next_img, cv2.COLOR_BGR2GRAY)
     p0 = cv2.goodFeaturesToTrack(prev_gray, maxCorners=100, qualityLevel=0.3, minDistance=7)
-
     if p0 is None:
         return next_img
 
@@ -42,9 +41,9 @@ def draw_optical_flow(prev_img, next_img):
 
     return next_img
 
-# Upload 2 images
-st.markdown("Upload **two consecutive images** (e.g., drone frames):")
-uploaded_imgs = st.file_uploader("Upload images", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+# Upload Images
+st.subheader("Upload two consecutive images (e.g., drone frames):")
+uploaded_imgs = st.file_uploader("Upload exactly 2 images", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if uploaded_imgs and len(uploaded_imgs) == 2:
     temp_paths = []
@@ -53,7 +52,6 @@ if uploaded_imgs and len(uploaded_imgs) == 2:
             tmp.write(img.read())
             temp_paths.append(tmp.name)
 
-    # Run YOLOv5
     col1, col2 = st.columns(2)
     with col1:
         st.image(temp_paths[0], caption="Frame 1", use_column_width=True)
@@ -66,11 +64,11 @@ if uploaded_imgs and len(uploaded_imgs) == 2:
         st.image(result2, caption="YOLOv5 Detection 2", use_column_width=True)
 
     # Optical Flow
-    st.markdown("### 🔄 Optical Flow Visualization")
-    prev = cv2.imread(temp_paths[0])
-    nextf = cv2.imread(temp_paths[1])
-    flow_result = draw_optical_flow(prev, nextf)
-    st.image(cv2.cvtColor(flow_result, cv2.COLOR_BGR2RGB), caption="Optical Flow Overlay", use_column_width=True)
+    st.subheader("🔄 Optical Flow Visualization")
+    frame1 = cv2.imread(temp_paths[0])
+    frame2 = cv2.imread(temp_paths[1])
+    flow_output = draw_optical_flow(frame1, frame2)
+    st.image(cv2.cvtColor(flow_output, cv2.COLOR_BGR2RGB), caption="Optical Flow Overlay", use_column_width=True)
 
-elif uploaded_imgs and len(uploaded_imgs) != 2:
-    st.warning("Please upload **exactly two images** to process optical flow.", icon="⚠️")
+elif uploaded_imgs:
+    st.warning("Please upload **exactly two images**.", icon="⚠️")

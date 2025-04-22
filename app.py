@@ -59,7 +59,7 @@ if uploaded and len(uploaded) == 2:
     st.subheader("🔄 Optical Flow")
     frame1 = cv2.imread(paths[0])
     frame2 = cv2.imread(paths[1])
-    flow = draw_optical_flow(frame1, frame2)
+    flow = draw_optical_flow(frame2, frame1)
     st.image(cv2.cvtColor(flow, cv2.COLOR_BGR2RGB), caption="Optical Flow Result", use_column_width=True)
 
 elif uploaded:
